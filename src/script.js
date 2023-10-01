@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import * as dat from 'lil-gui'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 THREE.ColorManagement.enabled = false
 
@@ -11,6 +12,7 @@ THREE.ColorManagement.enabled = false
 
 const textureLoader = new THREE.TextureLoader()
 const modelLoader = new GLTFLoader()
+const rgbeLoader = new RGBELoader()
 
 /**
  * Textures
@@ -20,18 +22,46 @@ const displacementTexture = textureLoader.load('/textures/topography_5k.png')
 const specularTexture = textureLoader.load('/textures/earth_specular_map.png')
 const cloudsTexture = textureLoader.load('/textures/earth_clouds.jpg')
 
+const environmentTexture = rgbeLoader.load('/textures/environment/sky.hdr', (envTexture) => {
+    envTexture.mapping = THREE.EquirectangularReflectionMapping
+    return envTexture
+})
+
+textureLoader.load('/textures/background.jpg', (texture) => {
+    scene.background = texture
+})
+
+/**
+ * Update materials
+ */
+
+const updateMaterials = (envTexture) => {
+    text.traverse((child) => {
+        if (child.isMesh && child.material.isMeshStandardMaterial) {
+
+            if (envTexture.isTexture) {
+                child.material.envMap = envTexture
+            }
+            child.material.envMapIntensity = parameters.envMapIntensity
+        }
+    })
+}
+
 /**
  * Debug
- */
+*/
 const gui = new dat.GUI()
 
-const parameters = {
-    materialColor: '#ffeded'
+let parameters = {
+    earthRotationSpeed: new THREE.Vector3(0.003, 1, 1),
+    waterColor: '#0055ff',
+    textRotation: new THREE.Vector3(),
+    lightPosition: new THREE.Vector3(3, 0.5, 2.5)
 }
 
 /**
  * Base
- */
+*/
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
@@ -54,11 +84,9 @@ const earthMaterial = new THREE.MeshStandardMaterial({
     alphaMap: specularTexture
 })
 
-const earthRotationSpeed = new THREE.Vector3(0.003, 1, 1)
-
 const earthFolder = gui.addFolder("Earth")
 earthFolder.add(earthMaterial, 'bumpScale', 0.1, 1, 0.1).name("Displacement shadow")
-earthFolder.add(earthRotationSpeed, 'x', 0, 0.009, 0.0001).name("Rotation speed")
+earthFolder.add(parameters.earthRotationSpeed, 'x', 0, 0.009, 0.0001).name("Rotation speed")
 earthFolder.add(earthMaterial, 'metalness', 0, 1, 0.1).name("metalness")
 earthFolder.add(earthMaterial, 'roughness', 0, 1, 0.1).name("roughness")
 
@@ -74,14 +102,10 @@ scene.add(earth)
  */
 
 const waterMaterial = new THREE.MeshStandardMaterial({
-    color: '#387aff',
+    color: '#0055ff',
     metalness: 0.16,
     roughness: 0.37
 })
-
-let waterParams = {
-    color: '#387aff'
-}
 
 let water = new THREE.Mesh(
     new THREE.SphereGeometry(0.99, 32, 32),
@@ -89,7 +113,7 @@ let water = new THREE.Mesh(
 )
 
 const waterFolder = gui.addFolder("Water")
-waterFolder.addColor(waterParams, 'color').name("Water color").onChange((color) => {
+waterFolder.addColor(parameters, 'waterColor').name("Water color").onChange((color) => {
     waterMaterial.color.set(color)
 })
 waterFolder.add(waterMaterial, 'metalness', 0, 1, 0.01)
@@ -115,20 +139,46 @@ const clouds = new THREE.Mesh(
 scene.add(clouds)
 
 /**
+ * Text
+ */
+let text
+
+modelLoader.load(
+    'models/text_for_intro.glb',
+    (glb) => {
+        text = glb.scene.children[0]
+        text.rotation.z = 0
+
+        updateMaterials(environmentTexture)
+        scene.add(text)
+    }
+)
+
+parameters.envMapIntensity = 1.3
+
+const textFolder = gui.addFolder("Text")
+textFolder.add(parameters.textRotation, 'z', 0, 360, 0.1).name("rotate z")
+textFolder.add(parameters, 'envMapIntensity', 0, 10, 0.001).onChange(updateMaterials)
+
+/**
  * Lights
  */
-const light = new THREE.DirectionalLight('#fffff', 2)
-let lightPosition = new THREE.Vector3(3, 0.5, 2.5)
+const light = new THREE.SpotLight('#fffff', 4, 10);
 
-const helper = new THREE.DirectionalLightHelper(light, 1);
+const helper = new THREE.SpotLightHelper(light, 1);
 scene.add(helper);
 
 const folder = gui.addFolder("Light")
-folder.add(lightPosition, "x", 0, 5, 0.1)
-folder.add(lightPosition, "y", 0, 5, 0.1)
-folder.add(lightPosition, "z", 0, 5, 0.1)
+folder.add(parameters.lightPosition, "x", -10, 10, 0.1).name('move x')
+folder.add(parameters.lightPosition, "y", -10, 10, 0.1).name('move y')
+folder.add(parameters.lightPosition, "z", -10, 10, 0.1).name('move z')
+folder.add(light, "intensity", 0, 10, 0.1)
+folder.addColor(light, 'color').name("Light color")
 
 scene.add(light)
+
+const ambientlight = new THREE.AmbientLight(0x404040, 2)
+scene.add(ambientlight)
 
 /**
  * Sizes
@@ -170,12 +220,14 @@ const controls = new OrbitControls(camera, canvas)
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
+    canvas: canvas,
+    antialias: true
 })
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap = true
+
 
 /**
  * Animate
@@ -186,16 +238,21 @@ const tick = () => {
     const elapsedTime = clock.getElapsedTime()
 
     // Light
-    let { x, y, z } = lightPosition
-    light.position.x = x
-    light.position.y = y
-    light.position.z = z
+    light.position.set(
+        parameters.lightPosition.x,
+        parameters.lightPosition.y,
+        parameters.lightPosition.z)
 
     // Earth
-    earth.rotation.y -= earthRotationSpeed.x
+    earth.rotation.y -= parameters.earthRotationSpeed.x
 
     // Clouds
-    clouds.rotation.y -= earthRotationSpeed.x / 2
+    clouds.rotation.y -= parameters.earthRotationSpeed.x / 2
+
+    // Text
+    if (text) {
+        text.rotation.z = parameters.textRotation.z * (Math.PI / 180)
+    }
 
     // Render
     renderer.render(scene, camera)
