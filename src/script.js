@@ -131,7 +131,7 @@ let water = new THREE.Mesh(
     waterMaterial
 )
 
-const waterFolder = gui.addFolder("Water")
+const waterFolder = gui.addFolder("Water").close()
 waterFolder.addColor(parameters, 'waterColor').name("Water color").onChange((color) => {
     waterMaterial.color.set(color)
 })
@@ -179,14 +179,14 @@ let textInitEuler = new THREE.Euler(...degreesToRadians(parameters.textInitRotat
 let textInitQuaternion = new THREE.Quaternion();
 textInitQuaternion.setFromEuler(textInitEuler)
 
-const textFolder = gui.addFolder("Text")
-textFolder.add(parameters.textInitRotation, 'x', 0, 360, 0.1).name("rotate x")
-textFolder.add(parameters.textInitRotation, 'y', 0, 360, 0.1).name("rotate y")
-textFolder.add(parameters.textInitRotation, 'z', 0, 360, 0.1).name("rotate z")
-textFolder.add(parameters.textPosition, 'x', -1, 0, 0.01).name("move x")
-textFolder.add(parameters.textPosition, 'y', -1, 0, 0.01).name("move y")
-textFolder.add(parameters.textPosition, 'z', 0, 7, 0.1).name("move z")
-textFolder.add(parameters, 'envMapIntensity', 0, 10, 0.001).onChange(updateMaterials)
+// const textFolder = gui.addFolder("Text")
+// textFolder.add(parameters.textInitRotation, 'x', 0, 360, 0.1).name("rotate x")
+// textFolder.add(parameters.textInitRotation, 'y', 0, 360, 0.1).name("rotate y")
+// textFolder.add(parameters.textInitRotation, 'z', 0, 360, 0.1).name("rotate z")
+// textFolder.add(parameters.textPosition, 'x', -1, 0, 0.01).name("move x")
+// textFolder.add(parameters.textPosition, 'y', -1, 0, 0.01).name("move y")
+// textFolder.add(parameters.textPosition, 'z', 0, 7, 0.1).name("move z")
+// textFolder.add(parameters, 'envMapIntensity', 0, 10, 0.001).onChange(updateMaterials)
 
 /**
  * Lights
@@ -196,7 +196,7 @@ const light = new THREE.SpotLight('#fffff', 4, 10);
 // const helper = new THREE.SpotLightHelper(light, 1);
 // scene.add(helper);
 
-const folder = gui.addFolder("Light")
+const folder = gui.addFolder("Light").close()
 folder.add(parameters.lightPosition, "x", -10, 10, 0.1).name('move x')
 folder.add(parameters.lightPosition, "y", -10, 10, 0.1).name('move y')
 folder.add(parameters.lightPosition, "z", -10, 10, 0.1).name('move z')
@@ -243,13 +243,13 @@ initialquaternion.setFromEuler(initialEuler);
 let targetEuler = new THREE.Euler(...degreesToRadians(parameters.cameraRotation));
 let targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler)
 
-const cameraFolder = gui.addFolder('Camera')
+const cameraFolder = gui.addFolder('Camera').close()
 cameraFolder.add(parameters.cameraPosition, 'x', -2, 2, 0.001).name('move x')
 cameraFolder.add(parameters.cameraPosition, 'y', -2, 2, 0.001).name('move y')
 cameraFolder.add(parameters.cameraPosition, 'z', 0, 6, 0.001).name('move z')
-cameraFolder.add(parameters.cameraRotation, 'x', -360, 0, 0.001).name('rotate x')
-cameraFolder.add(parameters.cameraRotation, 'y', -360, 0, 0.001).name('rotate y')
-cameraFolder.add(parameters.cameraRotation, 'z', -360, 0, 0.001).name('rotate z')
+// cameraFolder.add(parameters.cameraRotation, 'x', -360, 0, 0.001).name('rotate x')
+// cameraFolder.add(parameters.cameraRotation, 'y', -360, 0, 0.001).name('rotate y')
+// cameraFolder.add(parameters.cameraRotation, 'z', -360, 0, 0.001).name('rotate z')
 scene.add(camera)
 
 /**
@@ -272,6 +272,7 @@ renderer.shadowMap = true
 
 let earthRotation = 0
 
+light.position.set(...parameters.lightInitPosition)
 const animateCamera = () => {
     let easing = 0.001
     camera.position.z >= 2.3 ? easing = 0.01 : easing
@@ -282,6 +283,8 @@ const animateCamera = () => {
         camera.position.lerp(parameters.cameraPosition, easing)
         camera.quaternion.slerp(targetQuaternion, easing)
 
+
+        light.position.lerp(parameters.lightPosition, 0.01)
         return
     }
 
@@ -303,7 +306,6 @@ const textAnimation = () => {
     if (text) {
         eulerFromQuat.setFromQuaternion(text.quaternion)
         degFromEuler = eulerFromQuat.z * 180 / Math.PI
-        console.log(degFromEuler)
 
         if (earthRotation > 270 && degFromEuler < 120) {
             text.quaternion.slerp(textTargetQuaternion, 0.004)
@@ -316,8 +318,7 @@ const textAnimation = () => {
         }
 
         if (degFromEuler > 177) {
-            text.rotation.setFromQuaternion(textFinalQuaternion)
-            // text.quaternion.slerp(textFinalQuaternion, 0.01)
+            text.quaternion.slerp(textFinalQuaternion, 0.1)
             text.position.lerp(parameters.textPosition, 0.01)
             return
         }
@@ -335,7 +336,7 @@ const tick = () => {
     const elapsedTime = clock.getElapsedTime()
 
     // Light
-    light.position.set(...parameters.lightInitPosition)
+    // light.position.set(...parameters.lightPosition)
 
     // Camera
     animateCamera()
@@ -348,9 +349,6 @@ const tick = () => {
 
     // Text
     textAnimation()
-    // if (text) {
-    //     text.rotation.set(...degreesToRadians(parameters.textRotation))
-    // }
 
     // Render
     renderer.render(scene, camera)
