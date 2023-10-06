@@ -376,11 +376,3 @@ const tick = () => {
 }
 
 tick()
-
-window.addEventListener("load", () => {
-    fullScreenAndOrientation()
-})
-
-const fullScreenAndOrientation = () => {
-    screen.orientation.lock("landscape")
-}
