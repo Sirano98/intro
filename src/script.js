@@ -294,7 +294,6 @@ const animateCamera = (dt) => {
             newPosition.copy(direction).multiplyScalar(step).negate()
             camera.position.add(newPosition)
             distance = +camera.position.distanceToSquared(parameters.cameraPosition).toFixed(3)
-            console.log(distance)
             return
         }
 
@@ -377,3 +376,11 @@ const tick = () => {
 }
 
 tick()
+
+window.addEventListener("load", () => {
+    fullScreenAndOrientation()
+})
+
+const fullScreenAndOrientation = () => {
+    screen.orientation.lock("landscape")
+}
