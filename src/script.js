@@ -67,7 +67,7 @@ let parameters = {
     waterColor: '#0055ff',
     textRotation: new THREE.Vector3(90, 0, 180),
     textInitRotation: new THREE.Vector3(77, 32.6, 0),
-    textPosition: new THREE.Vector3(-0.05, -0.05, 6),
+    textPosition: new THREE.Vector3(-0.08, -0.08, 6),
     lightPosition: new THREE.Vector3(3, 0.5, 2.5),
     lightInitPosition: new THREE.Vector3(3, 2.6, -2.3),
     cameraPosition: new THREE.Vector3(0, 0, 6),
@@ -101,7 +101,7 @@ const earthMaterial = new THREE.MeshStandardMaterial({
     alphaMap: specularTexture
 })
 
-const earthFolder = gui.addFolder("Earth")
+const earthFolder = gui.addFolder("Earth").close()
 earthFolder.add(earthMaterial, 'bumpScale', 0.1, 1, 0.1).name("Displacement shadow")
 earthFolder.add(parameters, 'earthRotationSpeed', 0, 0.009, 0.0001).name("Rotation speed")
 earthFolder.add(earthMaterial, 'metalness', 0, 1, 0.1).name("metalness")
@@ -166,23 +166,22 @@ modelLoader.load(
     'models/text_for_intro.glb',
     (glb) => {
         text = glb.scene.children[0]
-        text.rotation.z = 0
-
         updateMaterials(environmentTexture)
         scene.add(text)
+
+        text.quaternion.rotateTowards(textQuaternion, 1)
     }
 )
 
 parameters.envMapIntensity = 1.3
 
-let textInitEuler = new THREE.Euler(...degreesToRadians(parameters.textInitRotation))
-let textInitQuaternion = new THREE.Quaternion();
-textInitQuaternion.setFromEuler(textInitEuler)
+const textQuaternion = new THREE.Quaternion()
+textQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.textInitRotation)))
 
-// const textFolder = gui.addFolder("Text")
+// const textFolder = gui.addFolder("Text").close()
 // textFolder.add(parameters.textInitRotation, 'x', 0, 360, 0.1).name("rotate x")
 // textFolder.add(parameters.textInitRotation, 'y', 0, 360, 0.1).name("rotate y")
-// textFolder.add(parameters.textInitRotation, 'z', 0, 360, 0.1).name("rotate z")
+// textFolder.add(parameters.textRotation, 'z', 0, 360, 0.1).name("rotate z")
 // textFolder.add(parameters.textPosition, 'x', -1, 0, 0.01).name("move x")
 // textFolder.add(parameters.textPosition, 'y', -1, 0, 0.01).name("move y")
 // textFolder.add(parameters.textPosition, 'z', 0, 7, 0.1).name("move z")
@@ -192,6 +191,8 @@ textInitQuaternion.setFromEuler(textInitEuler)
  * Lights
  */
 const light = new THREE.SpotLight('#fffff', 4, 10);
+
+light.position.set(...parameters.lightInitPosition)
 
 // const helper = new THREE.SpotLightHelper(light, 1);
 // scene.add(helper);
@@ -236,12 +237,10 @@ window.addEventListener('resize', () => {
 // Base camera
 const camera = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(...parameters.cameraInitPosition)
-let initialEuler = new THREE.Euler(...degreesToRadians(parameters.cameraInitRotaton));
-let initialquaternion = new THREE.Quaternion();
-initialquaternion.setFromEuler(initialEuler);
 
-let targetEuler = new THREE.Euler(...degreesToRadians(parameters.cameraRotation));
-let targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler)
+let cameraQuaternion = new THREE.Quaternion()
+cameraQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.cameraInitRotaton)))
+camera.quaternion.rotateTowards(cameraQuaternion, 1)
 
 const cameraFolder = gui.addFolder('Camera').close()
 cameraFolder.add(parameters.cameraPosition, 'x', -2, 2, 0.001).name('move x')
@@ -270,34 +269,47 @@ renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap = true
 
-let earthRotation = 0
+let distance = camera.position.distanceTo(parameters.cameraPosition)
+const direction = new THREE.Vector3()
+direction.copy(camera.position).sub(parameters.cameraPosition)
+let speed = 0.00005
 
-light.position.set(...parameters.lightInitPosition)
-const animateCamera = () => {
-    let easing = 0.001
-    camera.position.z >= 2.3 ? easing = 0.01 : easing
+let earthRotation = 0
+cameraQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.cameraRotation)))
+
+const animateCamera = (dt) => {
+
+    camera.position.z >= 2.3 ? speed = 0.0001 : speed
 
     earthRotation = earth.rotation.y * 180 / Math.PI
 
     if (earthRotation > 285) {
-        camera.position.lerp(parameters.cameraPosition, easing)
-        camera.quaternion.slerp(targetQuaternion, easing)
+        light.position.lerp(parameters.lightPosition, 0.0002 * dt)
 
+        camera.quaternion.rotateTowards(cameraQuaternion, 0.0001 * dt)
 
-        light.position.lerp(parameters.lightPosition, 0.01)
-        return
+        const newPosition = new THREE.Vector3()
+        let step = speed * dt
+        if (distance > 0) {
+            newPosition.copy(direction).multiplyScalar(step).negate()
+            camera.position.add(newPosition)
+            distance = +camera.position.distanceToSquared(parameters.cameraPosition).toFixed(3)
+            console.log(distance)
+            return
+        }
+
+        camera.position.set(...parameters.cameraPosition)
+        distance = 0
     }
-
-    camera.rotation.setFromQuaternion(initialquaternion)
 }
 
-let animVector = new THREE.Vector3(77, 32.6, 180)
-let textTargetEuler = new THREE.Euler(...degreesToRadians(animVector))
+let middlePosition = new THREE.Vector3(77, 32.6, 180)
+let textTargetEuler = new THREE.Euler(...degreesToRadians(middlePosition))
 let textTargetQuaternion = new THREE.Quaternion();
 textTargetQuaternion.setFromEuler(textTargetEuler)
 
 let textFinalQuaternion = new THREE.Quaternion();
-textFinalQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(new THREE.Vector3(90, 0, 180))))
+textFinalQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.textRotation)))
 
 let eulerFromQuat = new THREE.Euler()
 let degFromEuler
@@ -308,38 +320,45 @@ const textAnimation = () => {
         degFromEuler = eulerFromQuat.z * 180 / Math.PI
 
         if (earthRotation > 270 && degFromEuler < 120) {
-            text.quaternion.slerp(textTargetQuaternion, 0.004)
+            text.quaternion.rotateTowards(textTargetQuaternion, 0.009)
             return
         }
 
-        if (degFromEuler > 120 && degFromEuler < 177) {
-            text.quaternion.slerp(textFinalQuaternion, 0.01)
+        if (degFromEuler > 120 && degFromEuler < 140) {
+            text.quaternion.rotateTowards(textFinalQuaternion, 0.007)
             return
         }
 
-        if (degFromEuler > 177) {
-            text.quaternion.slerp(textFinalQuaternion, 0.1)
-            text.position.lerp(parameters.textPosition, 0.01)
+        if (degFromEuler > 140 && degFromEuler < 179) {
+            text.quaternion.rotateTowards(textFinalQuaternion, 0.004)
             return
         }
 
-        text.rotation.setFromQuaternion(textInitQuaternion)
+        if (degFromEuler > 179) {
+            if (!distance) text.position.lerp(parameters.textPosition, 0.01)
+            return
+        }
+
+        text.rotation.setFromQuaternion(textQuaternion)
     }
 }
 
 /**
  * Animate
  */
-const clock = new THREE.Clock()
+let time = Date.now()
 
 const tick = () => {
-    const elapsedTime = clock.getElapsedTime()
+    // Time
+    const currentTime = Date.now()
+    const deltaTime = currentTime - time
+    time = currentTime
 
     // Light
     // light.position.set(...parameters.lightPosition)
 
     // Camera
-    animateCamera()
+    animateCamera(deltaTime)
 
     // Earth
     earth.rotation.y += parameters.earthRotationSpeed
