@@ -391,9 +391,11 @@ const rotateCanvasForMobile = () => {
                 renderer.setSize(sizes.height, sizes.width)
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
                 body.style.cssText = `transform: rotate(90deg);`
+                alert("rotation")
             })
             .catch(() => {
                 console.log("rotation unavailable")
+                alert("rotation unavailable")
             })
     }
 }
