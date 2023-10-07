@@ -22,3 +22,9 @@ body {
     left: 0;
     outline: none;
 }
+
+/* @media (orentation: portrait) {
+    body {
+        transform: rotate(90deg);
+    }
+} */

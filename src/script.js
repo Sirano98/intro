@@ -382,22 +382,19 @@ tick()
 
 const rotateCanvasForMobile = () => {
     let ratio = sizes.width / sizes.height
+    let offset = sizes.width - sizes.height
 
-    if (ratio < 1) {
-        screen.orientation.lock("landscape")
-            .then(() => {
-                camera.aspect = sizes.height / sizes.width
-                camera.updateProjectionMatrix()
-                renderer.setSize(sizes.height, sizes.width)
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-                body.style.cssText = `transform: rotate(90deg);`
-                alert("rotation")
-            })
-            .catch(() => {
-                console.log("rotation unavailable")
-                alert("rotation unavailable")
-            })
+    if (ratio < 1 && screen.orientation.type === "portrait-primary") {
+        camera.aspect = sizes.height / sizes.width
+        camera.updateProjectionMatrix()
+        renderer.setSize(sizes.height, sizes.width)
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        body.style.cssText = `transform: rotate(90deg);`
+        canvas.style.cssText = `top: ${offset * (-1)}px;`
+        return
     }
+    body.style.cssText = `transform: rotate(0deg);`
+    canvas.style.cssText = `top: 0px;`
 }
 
 rotateCanvasForMobile()
