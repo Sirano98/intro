@@ -81,6 +81,7 @@ let parameters = {
 */
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
+const body = document.querySelector("body")
 
 // Scene
 const scene = new THREE.Scene()
@@ -229,6 +230,8 @@ window.addEventListener('resize', () => {
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    rotateCanvasForMobile()
 })
 
 /**
@@ -376,3 +379,23 @@ const tick = () => {
 }
 
 tick()
+
+const rotateCanvasForMobile = () => {
+    let ratio = sizes.width / sizes.height
+
+    if (ratio < 1) {
+        screen.orientation.lock("landscape")
+            .then(() => {
+                camera.aspect = sizes.height / sizes.width
+                camera.updateProjectionMatrix()
+                renderer.setSize(sizes.height, sizes.width)
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+                body.style.cssText = `transform: rotate(90deg);`
+            })
+            .catch(() => {
+                console.log("rotation unavailable")
+            })
+    }
+}
+
+rotateCanvasForMobile()
