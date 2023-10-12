@@ -9,10 +9,37 @@ THREE.ColorManagement.enabled = false
 /**
  * Loaders
  */
+let isLoaded = false
+let isStared = false
+let loadingInterval
+let currentPercentages = 0
+let nextPercent = 0
 
-const textureLoader = new THREE.TextureLoader()
-const modelLoader = new GLTFLoader()
-const rgbeLoader = new RGBELoader()
+const increaseCounter = () => {
+    if (currentPercentages < nextPercent) {
+        currentPercentages++
+        percentages.textContent = `${currentPercentages} %`
+    }
+}
+
+const loadingManager = new THREE.LoadingManager();
+
+loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+    nextPercent = Math.round((itemsLoaded / itemsTotal) * 100)
+    loadingInterval = setInterval(increaseCounter, 100)
+}
+
+loadingManager.onLoad = () => {
+    isLoaded = true
+    clearInterval(loadingInterval)
+    percentages.classList.add('hide')
+    startBtn.classList.add('visible_btn')
+}
+
+const textureLoader = new THREE.TextureLoader(loadingManager)
+const modelLoader = new GLTFLoader(loadingManager)
+const rgbeLoader = new RGBELoader(loadingManager)
+
 
 /**
  * Textures
@@ -31,9 +58,10 @@ textureLoader.load('/textures/background.jpg', (texture) => {
     scene.background = texture
 })
 
+
 /**
  * Update materials
- */
+*/
 
 const updateMaterials = (envTexture) => {
     text.traverse((child) => {
@@ -81,7 +109,19 @@ let parameters = {
 */
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
-const body = document.querySelector("body")
+const overlay = document.querySelector('.overlay')
+const percentages = document.querySelector('.percentages')
+const startBtn = document.querySelector('.start_btn')
+
+/**
+ * Star animation
+ */
+
+const startAnimation = () => {
+    overlay.classList.add('ended')
+    isStared = true
+}
+startBtn.addEventListener('click', startAnimation)
 
 // Scene
 const scene = new THREE.Scene()
@@ -285,18 +325,23 @@ const animateCamera = (dt) => {
     earthRotation = earth.rotation.y * 180 / Math.PI
 
     if (earthRotation > 285) {
-        light.position.lerp(parameters.lightPosition, 0.0002 * dt)
-
+        // rotate camera
         camera.quaternion.rotateTowards(cameraQuaternion, 0.0001 * dt)
 
         const newPosition = new THREE.Vector3()
         let step = speed * dt
         if (distance > 0) {
+            // move light
+            light.position.lerp(parameters.lightPosition, 0.0002 * dt)
+
+            // move camera
             newPosition.copy(direction).multiplyScalar(step).negate()
             camera.position.add(newPosition)
             distance = +camera.position.distanceToSquared(parameters.cameraPosition).toFixed(3)
             return
         }
+
+        light.position.lerp(parameters.lightPosition, 0.1)
 
         camera.position.set(...parameters.cameraPosition)
         distance = 0
@@ -349,26 +394,28 @@ const textAnimation = () => {
 let time = Date.now()
 
 const tick = () => {
-    // Time
-    const currentTime = Date.now()
-    const deltaTime = currentTime - time
-    time = currentTime
+    if (isLoaded && isStared) {
+        // Time
+        const currentTime = Date.now()
+        const deltaTime = currentTime - time
+        time = currentTime
 
-    // Light
-    // light.position.set(...parameters.lightPosition)
+        // Light
+        // light.position.set(...parameters.lightPosition)
 
-    // Camera
-    animateCamera(deltaTime)
+        // Camera
+        animateCamera(deltaTime)
 
-    // Earth
-    earth.rotation.y += parameters.earthRotationSpeed
+        // Earth
+        earth.rotation.y += parameters.earthRotationSpeed
 
-    // Clouds
-    clouds.rotation.y += parameters.earthRotationSpeed / 2
+        // Clouds
+        clouds.rotation.y += parameters.earthRotationSpeed / 2
 
-    // Text
-    textAnimation()
+        // Text
+        textAnimation()
 
+    }
     // Render
     renderer.render(scene, camera)
 
