@@ -120,6 +120,8 @@ const startBtn = document.querySelector('.start_btn')
 const startAnimation = () => {
     overlay.classList.add('ended')
     isStared = true
+    canvas.requestFullscreen()
+    screen.orientation.lock("landscape")
 }
 startBtn.addEventListener('click', startAnimation)
 
