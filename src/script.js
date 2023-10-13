@@ -331,13 +331,20 @@ const animateCamera = (dt) => {
         camera.quaternion.rotateTowards(cameraQuaternion, 0.0001 * dt)
 
         const newPosition = new THREE.Vector3()
-        let step = speed * dt
+        // let step = speed * dt
+        let step = 60
         if (distance > 0) {
             // move light
             light.position.lerp(parameters.lightPosition, 0.0002 * dt)
 
             // move camera
-            newPosition.copy(direction).multiplyScalar(step).negate()
+            // newPosition.copy(direction).multiplyScalar(step).negate()
+
+            distance < 15 && distance > 5 ? step = 40 : step
+            distance < 5 ? step = 30 : step
+
+            newPosition.copy(direction).divideScalar(dt * step).negate()
+            console.log(distance)
             camera.position.add(newPosition)
             distance = +camera.position.distanceToSquared(parameters.cameraPosition).toFixed(3)
             return
