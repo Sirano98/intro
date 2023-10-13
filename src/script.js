@@ -338,13 +338,7 @@ const animateCamera = (dt) => {
             light.position.lerp(parameters.lightPosition, 0.0002 * dt)
 
             // move camera
-            // newPosition.copy(direction).multiplyScalar(step).negate()
-
-            distance < 15 && distance > 5 ? step = 40 : step
-            distance < 5 ? step = 30 : step
-
-            newPosition.copy(direction).divideScalar(dt * step).negate()
-            console.log(distance)
+            newPosition.copy(direction).multiplyScalar(step).negate()
             camera.position.add(newPosition)
             distance = +camera.position.distanceToSquared(parameters.cameraPosition).toFixed(3)
             return
