@@ -331,8 +331,8 @@ const animateCamera = (dt) => {
         camera.quaternion.rotateTowards(cameraQuaternion, 0.0001 * dt)
 
         const newPosition = new THREE.Vector3()
-        // let step = speed * dt
-        let step = 60
+        let step = speed * dt
+
         if (distance > 0) {
             // move light
             light.position.lerp(parameters.lightPosition, 0.0002 * dt)
