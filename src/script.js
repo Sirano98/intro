@@ -201,6 +201,16 @@ const clouds = new THREE.Mesh(
 scene.add(clouds)
 
 /**
+ * Atmosphere
+ */
+const atmosphereMaterial = new THREE.ShaderMaterial()
+
+const atmoshereMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 32, 32),
+    atmosphereMaterial
+)
+
+/**
  * Text
  */
 let text
