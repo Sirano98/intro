@@ -472,10 +472,11 @@ const tick = () => {
 
         // Text
         textAnimation(deltaTime)
+
+        // Render
+        renderer.render(scene, camera)
     }
 
-    // Render
-    renderer.render(scene, camera)
 
     // PFS statistic
     stats.update()
