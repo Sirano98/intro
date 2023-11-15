@@ -187,7 +187,7 @@ const waterMaterial = new THREE.MeshStandardMaterial({
 })
 
 let water = new THREE.Mesh(
-    new THREE.SphereGeometry(0.99, 32, 32),
+    new THREE.SphereGeometry(0.996, 32, 32),
     waterMaterial
 )
 
