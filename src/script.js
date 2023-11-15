@@ -3,13 +3,13 @@ import * as dat from 'lil-gui'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import Stats from 'three/examples/jsm/libs/stats.module'
 
 THREE.ColorManagement.enabled = false
 
 /**
  * Loaders
  */
-let isLoaded = false
 let isStared = false
 let loadingInterval
 let currentPercentages = 0
@@ -30,7 +30,6 @@ loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
 }
 
 loadingManager.onLoad = () => {
-    isLoaded = true
     clearInterval(loadingInterval)
     percentages.classList.add('hide')
     startBtn.classList.add('visible_btn')
@@ -39,7 +38,6 @@ loadingManager.onLoad = () => {
 const textureLoader = new THREE.TextureLoader(loadingManager)
 const modelLoader = new GLTFLoader(loadingManager)
 const rgbeLoader = new RGBELoader(loadingManager)
-
 
 /**
  * Textures
@@ -54,10 +52,26 @@ const environmentTexture = rgbeLoader.load('/textures/environment/sky.hdr', (env
     return envTexture
 })
 
-textureLoader.load('/textures/background.jpg', (texture) => {
-    scene.background = texture
-})
+const setBackgroundSize = (scene, backgroundImageWidth, backgroundImageHeight) => {
+    if (scene.background) {
 
+        let factor = (backgroundImageWidth / backgroundImageHeight) / (sizes.width / sizes.height);
+
+        scene.background.offset.x = factor > 1 ? (1 - 1 / factor) / 2 : 0;
+        scene.background.offset.y = factor > 1 ? 0 : (1 - factor) / 2;
+
+        scene.background.repeat.x = factor > 1 ? 1 / factor : 1;
+        scene.background.repeat.y = factor > 1 ? 1 : factor;
+    }
+}
+
+const backgroundURL = "/textures/background.jpg"
+const backgroundImage = new Image();
+backgroundImage.src = backgroundURL;
+backgroundImage.onload = function () {
+    scene.background = new THREE.TextureLoader().load(backgroundURL);
+    setBackgroundSize(scene, backgroundImage.width, backgroundImage.height);
+}
 
 /**
  * Update materials
@@ -75,34 +89,34 @@ const updateMaterials = (envTexture) => {
     })
 }
 
-const degreesToRadians = (vector) => {
-    const vectorWithadians = new THREE.Vector3
-    vectorWithadians.x = vector.x * (Math.PI / 180)
-    vectorWithadians.y = vector.y * (Math.PI / 180)
-    vectorWithadians.z = vector.z * (Math.PI / 180)
-
-    return vectorWithadians
-}
-
 /**
  * Debug
 */
 const gui = new dat.GUI()
 
 let parameters = {
-    earthRotationSpeed: 0.003,
+    earthRotationSpeed: 0.15,
     earhInitialRotation: 230,
     waterColor: '#0055ff',
-    textRotation: new THREE.Vector3(90, 0, 180),
-    textInitRotation: new THREE.Vector3(77, 32.6, 0),
-    textPosition: new THREE.Vector3(-0.08, -0.08, 6),
+    textInitRotation: new THREE.Euler(1.62, 0.9, -0.3),
+    textFinalRotation: new THREE.Euler(1.58, 0, 3.15),
+    textInitPosition: new THREE.Vector3(0),
+    textFinalPosition: new THREE.Vector3(-0.05, -0.05, 6),
     lightPosition: new THREE.Vector3(3, 0.5, 2.5),
     lightInitPosition: new THREE.Vector3(3, 2.6, -2.3),
     cameraPosition: new THREE.Vector3(0, 0, 6),
-    cameraRotation: new THREE.Vector3(),
+    cameraRotation: new THREE.Euler(0),
     cameraInitPosition: new THREE.Vector3(0.4, 0.65, 1.2),
-    cameraInitRotaton: new THREE.Vector3(0, 0, -35)
+    cameraInitRotaton: new THREE.Euler(0, 0, -0.61),
+    envMapIntensity: 1.3,
+    cameraRotationDebug: 0,
+    cameraPositionDebug: 0,
+    textRotationDebug: 0,
+    rotationDebug: new THREE.Vector3(0)
 }
+
+const stats = new Stats()
+document.body.appendChild(stats.dom)
 
 /**
  * Base
@@ -114,16 +128,19 @@ const percentages = document.querySelector('.percentages')
 const startBtn = document.querySelector('.start_btn')
 
 /**
- * Star animation
+ * Start animation
  */
 
-const startAnimation = () => {
-    overlay.classList.add('ended')
-    isStared = true
-    canvas.requestFullscreen()
-    screen.orientation.lock("landscape")
+const startAnimation = (e) => {
+    if (e.type === 'click' || e.key === 'Enter') {
+        overlay.classList.add('ended')
+        isStared = true
+        canvas.requestFullscreen()
+        screen.orientation.lock("landscape")
+    }
 }
 startBtn.addEventListener('click', startAnimation)
+document.addEventListener('keydown', startAnimation)
 
 // Scene
 const scene = new THREE.Scene()
@@ -146,7 +163,7 @@ const earthMaterial = new THREE.MeshStandardMaterial({
 
 const earthFolder = gui.addFolder("Earth").close()
 earthFolder.add(earthMaterial, 'bumpScale', 0.1, 1, 0.1).name("Displacement shadow")
-earthFolder.add(parameters, 'earthRotationSpeed', 0, 0.009, 0.0001).name("Rotation speed")
+earthFolder.add(parameters, 'earthRotationSpeed', 0, 1, 0.0001).name("Rotation speed")
 earthFolder.add(earthMaterial, 'metalness', 0, 1, 0.1).name("metalness")
 earthFolder.add(earthMaterial, 'roughness', 0, 1, 0.1).name("roughness")
 
@@ -222,14 +239,9 @@ modelLoader.load(
         updateMaterials(environmentTexture)
         scene.add(text)
 
-        text.quaternion.rotateTowards(textQuaternion, 1)
+        text.setRotationFromEuler(parameters.textInitRotation)
     }
 )
-
-parameters.envMapIntensity = 1.3
-
-const textQuaternion = new THREE.Quaternion()
-textQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.textInitRotation)))
 
 // const textFolder = gui.addFolder("Text").close()
 // textFolder.add(parameters.textInitRotation, 'x', 0, 360, 0.1).name("rotate x")
@@ -282,6 +294,8 @@ window.addEventListener('resize', () => {
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    setBackgroundSize(scene, backgroundImage.width, backgroundImage.height);
 })
 
 /**
@@ -291,9 +305,14 @@ window.addEventListener('resize', () => {
 const camera = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(...parameters.cameraInitPosition)
 
-let cameraQuaternion = new THREE.Quaternion()
-cameraQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.cameraInitRotaton)))
-camera.quaternion.rotateTowards(cameraQuaternion, 1)
+//Set camera rotation to init position with quaternion 
+let cameraInitQuaternion = new THREE.Quaternion()
+cameraInitQuaternion.setFromEuler(parameters.cameraInitRotaton)
+camera.setRotationFromQuaternion(cameraInitQuaternion)
+
+// Create quaternion with final camera rotation
+let cameraFinalQuaternion = new THREE.Quaternion()
+cameraFinalQuaternion.setFromEuler(parameters.cameraRotation)
 
 const cameraFolder = gui.addFolder('Camera').close()
 cameraFolder.add(parameters.cameraPosition, 'x', -2, 2, 0.001).name('move x')
@@ -322,96 +341,122 @@ renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap = true
 
-let distance = camera.position.distanceTo(parameters.cameraPosition)
-const direction = new THREE.Vector3()
-direction.copy(camera.position).sub(parameters.cameraPosition)
-let speed = 0.00005
-
-let earthRotation = 0
-cameraQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.cameraRotation)))
-
-const animateCamera = (dt) => {
-
-    camera.position.z >= 2.3 ? speed = 0.0001 : speed
-
-    earthRotation = earth.rotation.y * 180 / Math.PI
-
-    if (earthRotation > 285) {
-        // rotate camera
-        camera.quaternion.rotateTowards(cameraQuaternion, 0.0001 * dt)
-
-        const newPosition = new THREE.Vector3()
-        let step = speed * dt
-
-        if (distance > 0) {
-            // move light
-            light.position.lerp(parameters.lightPosition, 0.0002 * dt)
-
-            // move camera
-            newPosition.copy(direction).multiplyScalar(step).negate()
-            camera.position.add(newPosition)
-            distance = +camera.position.distanceToSquared(parameters.cameraPosition).toFixed(3)
-            return
-        }
-
-        light.position.lerp(parameters.lightPosition, 0.1)
-
-        camera.position.set(...parameters.cameraPosition)
-        distance = 0
-    }
-}
-
-let middlePosition = new THREE.Vector3(77, 32.6, 180)
-let textTargetEuler = new THREE.Euler(...degreesToRadians(middlePosition))
-let textTargetQuaternion = new THREE.Quaternion();
-textTargetQuaternion.setFromEuler(textTargetEuler)
-
-let textFinalQuaternion = new THREE.Quaternion();
-textFinalQuaternion.setFromEuler(new THREE.Euler(...degreesToRadians(parameters.textRotation)))
-
-let eulerFromQuat = new THREE.Euler()
-let degFromEuler
-
-const textAnimation = () => {
-    if (text) {
-        eulerFromQuat.setFromQuaternion(text.quaternion)
-        degFromEuler = eulerFromQuat.z * 180 / Math.PI
-
-        if (earthRotation > 270 && degFromEuler < 120) {
-            text.quaternion.rotateTowards(textTargetQuaternion, 0.009)
-            return
-        }
-
-        if (degFromEuler > 120 && degFromEuler < 140) {
-            text.quaternion.rotateTowards(textFinalQuaternion, 0.007)
-            return
-        }
-
-        if (degFromEuler > 140 && degFromEuler < 179) {
-            text.quaternion.rotateTowards(textFinalQuaternion, 0.004)
-            return
-        }
-
-        if (degFromEuler > 179) {
-            if (!distance) text.position.lerp(parameters.textPosition, 0.01)
-            return
-        }
-
-        text.rotation.setFromQuaternion(textQuaternion)
-    }
-}
 
 /**
  * Animate
- */
+*/
+let earthRotationInDegrees = 0
+
+const animationStep = (speed) => {
+    /*
+    Creating a closure for instantiating animations with different speed.
+    Timer increments by deltaTime the step variable calculates easing 
+    function for smoother transition.
+    Easing fanction taken from https://easings.net/
+    */
+
+    let timer = 0
+    let step = 0
+
+    return (deltaTime, easingFunction) => {
+        timer += speed * (deltaTime / 1000)
+        timer = timer < 1 ? timer : 1
+
+        return easingFunction ? easingFunction(timer) : -(Math.cos(Math.PI * timer) - 1) / 2
+    }
+}
+
+const easeOutQuint = (step) => {
+    return 1 - Math.pow(1 - step, 3)
+}
+
+/* Creating counters for animations where the argument is the speed of the animation.*/
+const cameraMoveStep = animationStep(0.06)
+const lightRotateStep = animationStep(0.1)
+const cameraRotateStep = animationStep(0.1)
+const textRotationFirstPart = animationStep(0.06)
+const textRotationSecondPart = animationStep(0.06)
+const textMoveStep = animationStep(0.2)
+
+// cameraFolder.add(parameters, 'cameraRotationDebug', 0, 1, 0.001).name("cameraRotation")
+// cameraFolder.add(parameters, 'cameraPositionDebug', 0, 1, 0.001).name("cameraPosition")
+// cameraFolder.add(parameters, 'textRotationDebug', 0, 1, 0.001).name("textRotation")
+
+const animateCamera = (deltaTime) => {
+
+    /*Converting radians to degrees */
+    earthRotationInDegrees = earth.rotation.y * 180 / Math.PI
+
+    // // rotate camera
+    // camera.quaternion.slerpQuaternions(cameraInitQuaternion, cameraFinalQuaternion, 1)
+    // camera.position.lerpVectors(parameters.cameraInitPosition, parameters.cameraPosition, parameters.cameraPositionDebug)
+    if (earthRotationInDegrees > 285) {
+
+        // rotate camera
+        camera.quaternion
+            .slerpQuaternions(cameraInitQuaternion, cameraFinalQuaternion, cameraRotateStep(deltaTime))
+
+        // move camera
+        camera.position
+            .lerpVectors(parameters.cameraInitPosition, parameters.cameraPosition, cameraMoveStep(deltaTime))
+
+        // move light
+        light.position
+            .lerpVectors(parameters.lightInitPosition, parameters.lightPosition, lightRotateStep(deltaTime))
+    }
+}
+
+// cameraFolder.add(parameters.rotationDebug, 'x', 0, 5, 0.001).name("textRotationX")
+// cameraFolder.add(parameters.rotationDebug, 'y', 0, 5, 0.001).name("textRotationY")
+// cameraFolder.add(parameters.rotationDebug, 'z', -2, 10, 0.001).name("textRotationZ")
+
+let textAnimatonProgress = 0
+
+const eulerLerp = (initialEuler, targetEuler, deltaTime) => {
+
+    /*
+    The algorithm returns the interpolation between Euler angles, which means
+    means that it returns an Euler angle that depends on the interpolation percentage, 
+    which is between 0 and 1. Also in this case, we rotate the object along the z-axis 
+    70% of the way and only then start rotating all the axes together. 
+    */
+
+    const firstPartAnimStep = textRotationFirstPart(deltaTime, easeOutQuint)
+    textAnimatonProgress = firstPartAnimStep
+
+    let x = initialEuler.x + (targetEuler.x - initialEuler.x) * 0
+    let y = initialEuler.y + (targetEuler.y - initialEuler.y) * 0
+    let z = initialEuler.z + (targetEuler.z - initialEuler.z) * firstPartAnimStep
+
+    if (firstPartAnimStep >= 0.7) {
+        x = initialEuler.x + (targetEuler.x - initialEuler.x) * textRotationSecondPart(deltaTime)
+        y = initialEuler.y + (targetEuler.y - initialEuler.y) * textRotationSecondPart(deltaTime)
+    }
+
+    return new THREE.Euler(x, y, z)
+}
+
+const textAnimation = (deltaTime) => {
+
+    const { textInitRotation, textFinalRotation, textInitPosition, textFinalPosition } = parameters
+
+    if (text && earthRotationInDegrees > 285) {
+        text.setRotationFromEuler(eulerLerp(textInitRotation, textFinalRotation, deltaTime))
+        if (textAnimatonProgress === 1) {
+            text.position.lerpVectors(textInitPosition, textFinalPosition, textMoveStep(deltaTime))
+        }
+    }
+}
+
 let time = Date.now()
 
 const tick = () => {
-    if (isLoaded && isStared) {
-        // Time
-        const currentTime = Date.now()
-        const deltaTime = currentTime - time
-        time = currentTime
+    // Time
+    const currentTime = Date.now()
+    const deltaTime = (currentTime - time)
+    time = currentTime
+
+    if (isStared) {
 
         // Light
         // light.position.set(...parameters.lightPosition)
@@ -420,17 +465,27 @@ const tick = () => {
         animateCamera(deltaTime)
 
         // Earth
-        earth.rotation.y += parameters.earthRotationSpeed
+        earth.rotation.y += parameters.earthRotationSpeed * deltaTime / 1000
 
         // Clouds
-        clouds.rotation.y += parameters.earthRotationSpeed / 2
+        clouds.rotation.y += (parameters.earthRotationSpeed / 2) * deltaTime / 1000
 
         // Text
-        textAnimation()
+        textAnimation(deltaTime)
 
         // Render
         renderer.render(scene, camera)
     }
+
+
+    // PFS statistic
+    stats.update()
+
+    // setTimeout(function () {
+
+    //     requestAnimationFrame(tick);
+
+    // }, 1000 / 40);
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
