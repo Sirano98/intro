@@ -182,8 +182,10 @@ scene.add(earth)
 
 const waterMaterial = new THREE.MeshStandardMaterial({
     color: '#0055ff',
-    metalness: 0.16,
-    roughness: 0.37
+    metalness: 0.1,
+    roughness: 0.6
+    // metalness: 0.16,
+    // roughness: 0.37
 })
 
 let water = new THREE.Mesh(
