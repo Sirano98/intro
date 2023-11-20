@@ -1,3 +1,15 @@
+varying vec3 vNormal;
+varying vec3 vCameraDirection;
+
 void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+    vec4 viewPosition = viewMatrix * modelPosition;
+    vec4 projectedPosition = projectionMatrix * viewPosition;
+
+    gl_Position = projectedPosition;
+
+    vec4 viewCameraPosition = viewMatrix * vec4(cameraPosition, 1.0);
+    vCameraDirection = normalize(viewCameraPosition.xyz - viewPosition.xyz);
+
+    vNormal = normalize(normalMatrix * normal);
 }
