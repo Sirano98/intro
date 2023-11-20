@@ -1,16 +1,18 @@
 import * as THREE from 'three'
 import * as dat from 'lil-gui'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import Stats from 'three/examples/jsm/libs/stats.module'
+import vertexShader from './shaders/atmosphere/vertex.glsl'
+import fragmentShader from './shaders/atmosphere/fragment.glsl'
 
 THREE.ColorManagement.enabled = false
 
 /**
  * Loaders
  */
-let isStared = false
+let isStared = false //change for test
 let loadingInterval
 let currentPercentages = 0
 let nextPercent = 0
@@ -112,7 +114,9 @@ let parameters = {
     cameraRotationDebug: 0,
     cameraPositionDebug: 0,
     textRotationDebug: 0,
-    rotationDebug: new THREE.Vector3(0)
+    rotationDebug: new THREE.Vector3(0),
+    atmosphereSize: 1.1,
+    atmosphereColor: new THREE.Color(0.3, 0.6, 1.0)
 }
 
 const stats = new Stats()
@@ -182,10 +186,8 @@ scene.add(earth)
 
 const waterMaterial = new THREE.MeshStandardMaterial({
     color: '#0055ff',
-    metalness: 0.1,
-    roughness: 0.6
-    // metalness: 0.16,
-    // roughness: 0.37
+    metalness: 0.25,
+    roughness: 0.57
 })
 
 let water = new THREE.Mesh(
@@ -209,7 +211,8 @@ scene.add(water)
 const cloudsMaterial = new THREE.MeshStandardMaterial({
     map: cloudsTexture,
     transparent: true,
-    alphaMap: cloudsTexture
+    alphaMap: cloudsTexture,
+    depthWrite: false
 })
 
 const clouds = new THREE.Mesh(
@@ -222,12 +225,39 @@ scene.add(clouds)
 /**
  * Atmosphere
  */
-const atmosphereMaterial = new THREE.ShaderMaterial()
+const atmosphereMaterial = new THREE.ShaderMaterial({
+    transparent: true,
+    vertexShader,
+    fragmentShader,
+    blending: THREE.AdditiveBlending,
+    side: THREE.BackSide,
+    uniforms: {
+        uAtmosphereIntensity: { value: 0.3 },
+        uAtmosphereOpacity: { value: 1.0 },
+        uAtmosphereColor: { value: new THREE.Color('#0091ff') }
+    }
+})
 
-const atmoshereMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 32, 32),
+
+const atmosphere = new THREE.Mesh(
+    new THREE.SphereGeometry(1.1, 32, 32),
     atmosphereMaterial
 )
+
+atmosphere.scale.set(parameters.atmosphereSize, parameters.atmosphereSize, parameters.atmosphereSize)
+
+const atmosphereFolder = gui.addFolder('Atmosphere').close()
+atmosphereFolder.add(atmosphereMaterial.uniforms.uAtmosphereIntensity, 'value', 0, 2, 0.001).name('atmosphere intensity')
+atmosphereFolder.add(atmosphereMaterial.uniforms.uAtmosphereOpacity, 'value', 0, 1, 0.001).name('atmosphere opacity')
+atmosphereFolder.add(parameters, 'atmosphereSize', 1, 2, 0.001).name('atmosphere size')
+    .onChange(() => {
+        const { atmosphereSize } = parameters
+        atmosphere.scale.set(atmosphereSize, atmosphereSize, atmosphereSize)
+    })
+atmosphereFolder.addColor(parameters, 'atmosphereColor').name('atmosphere color')
+    .onChange(() => { atmosphereMaterial.uniforms.uAtmosphereColor.value.set(parameters.atmosphereColor) })
+
+scene.add(atmosphere)
 
 /**
  * Text
@@ -306,6 +336,7 @@ window.addEventListener('resize', () => {
 // Base camera
 const camera = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(...parameters.cameraInitPosition)
+// camera.position.z = 6
 
 //Set camera rotation to init position with quaternion 
 let cameraInitQuaternion = new THREE.Quaternion()
@@ -315,6 +346,9 @@ camera.setRotationFromQuaternion(cameraInitQuaternion)
 // Create quaternion with final camera rotation
 let cameraFinalQuaternion = new THREE.Quaternion()
 cameraFinalQuaternion.setFromEuler(parameters.cameraRotation)
+
+// camera.position.set(...parameters.cameraPosition)
+// camera.rotation.set(...parameters.cameraRotation)
 
 const cameraFolder = gui.addFolder('Camera').close()
 cameraFolder.add(parameters.cameraPosition, 'x', -2, 2, 0.001).name('move x')
@@ -479,8 +513,9 @@ const tick = () => {
         renderer.render(scene, camera)
     }
 
+    // controls.update();
 
-    // PFS statistic
+    // FPS statistic
     stats.update()
 
     // setTimeout(function () {
