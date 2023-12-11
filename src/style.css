@@ -1,25 +1,52 @@
+/* poppins-regular - latin */
+@font-face {
+    font-display: swap;
+    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../static/fonts/poppins-v20-latin-regular.woff2') format('woff2');
+    /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* poppins-500 - latin */
+@font-face {
+    font-display: swap;
+    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    src: url('../static/fonts/poppins-v20-latin-500.woff2') format('woff2');
+    /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* poppins-700 - latin */
+@font-face {
+    font-display: swap;
+    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 700;
+    src: url('../static/fonts/poppins-v20-latin-700.woff2') format('woff2');
+    /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
 * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
-html,
+html {
+    scroll-behavior: smooth;
+}
+
 body {
-    overflow: hidden;
-}
-
-body {
-    height: 100vh;
-    width: 100vh;
-    top: 0;
-    left: 0px;
-}
-
-.webgl {
-    position: fixed;
-    top: 0;
-    left: 0;
-    outline: none;
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    color: #fff;
+    overflow-x: hidden;
 }
 
 .overlay {
@@ -28,13 +55,16 @@ body {
     position: absolute;
     top: 0px;
     left: 0px;
-    background-color: #1b1b1b;
+    background-color: #090097;
+    z-index: 1000;
     opacity: 1;
     transition: opacity .6s;
 }
 
 .overlay.ended {
     opacity: 0;
+    user-select: none;
+    visibility: hidden;
 }
 
 .percentages {
@@ -74,4 +104,137 @@ body {
 
 .hide {
     visibility: hidden;
+}
+
+/* Experience
+================ */
+.experience {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    outline: none;
+}
+
+.experience-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Page
+================ */
+.page {
+    position: relative;
+    z-index: 999;
+    width: 100vw;
+}
+
+.container {
+    width: 100%;
+    padding: 0px 60px;
+}
+
+.portfolio {
+    height: 100vh;
+}
+
+/* .blue-block {
+    background-color: rgba(0, 85, 255, 0.522);
+    border: 2px solid #fff;
+    border-radius: 10px;
+    padding: 60px 0px;
+} */
+
+/* Header */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 15px;
+    transform: translateY(-100%);
+}
+
+.logo {
+    text-transform: uppercase;
+    font-size: 25px;
+    font-weight: 600;
+}
+
+.header__link {
+    text-decoration: none;
+    color: #fff;
+    font-size: 25px;
+    margin-right: 60px;
+}
+
+.header__link:hover {
+    text-decoration: underline;
+}
+
+
+/* Hero */
+.hero {
+    height: calc(100vh - 53px);
+    display: flex;
+    align-items: center;
+}
+
+.hero__header {
+    text-align: start;
+    font-weight: 800;
+    font-size: 150px;
+    line-height: 200px;
+}
+
+.header__wrapper {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.hero__header-separate {
+    display: block;
+    position: relative;
+    transform: translateY(100%);
+}
+
+/* About */
+
+.about__wrapper {
+    background-color: rgba(0, 85, 255, 0.522);
+    border: 2px solid #fff;
+    border-radius: 20px;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.about__text {
+    font-size: 26px;
+    line-height: 50px;
+}
+
+/* Contacts */
+.contacts {
+    padding-bottom: 70px;
+}
+
+.contacts__wrapper {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    background-color: rgba(0, 85, 255, 0.522);
+    border: 2px solid #fff;
+    border-radius: 20px;
+    padding: 60px 0px;
+    width: 85%;
+    margin: 0px auto;
+    opacity: 0;
+}
+
+.contacts__title {
+    font-weight: 600;
+    font-size: 30px;
+}
+
+.contacts__text {
+    font-size: 23px;
 }
