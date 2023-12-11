@@ -24,6 +24,13 @@ export default class Monitor {
         const partsOfMonitor = [...this.resource.scene.children]
 
         for (let part of partsOfMonitor) {
+
+            if (part.name === "monitor") {
+                part.material = new THREE.MeshBasicMaterial({
+                    map: this.resources.items.screen
+                })
+            }
+
             this.monitor.add(part)
         }
 

@@ -38,5 +38,10 @@ export default [
         name: "environmentMap",
         type: "textureHDR",
         path: "/textures/environment/sky.hdr"
+    },
+    {
+        name: "screen",
+        type: "videoTexture",
+        path: "/textures/car.mp4"
     }
 ]
