@@ -1,3 +1,3 @@
 # Intro animation for website
 
-https://intro-scene.vercel.app/
+https://3d-site-test.vercel.app/
