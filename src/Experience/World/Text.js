@@ -39,12 +39,12 @@ export default class Text extends EventEmitter {
             this.text.setRotationFromEuler(this.eulerLerp(textInitRotation, textFinalRotation, this.time.delta))
 
             if (this.parameters.textAnimatonProgress === 1) {
-                let textMoveProgress = this.textMoveStep(this.time.delta)
-                this.text.position.lerpVectors(textInitPosition, textFinalPosition, textMoveProgress)
+                // let textMoveProgress = this.textMoveStep(this.time.delta)
+                // this.text.position.lerpVectors(textInitPosition, textFinalPosition, textMoveProgress)
 
-                if (textMoveProgress === 1) {
-                    this.emit("introFinished")
-                }
+                this.emit("introFinished")
+                // if (textMoveProgress === 1) {
+                // }
             }
         }
     }

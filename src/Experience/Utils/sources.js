@@ -5,11 +5,6 @@ export default [
         path: "/models/text_for_intro.glb"
     },
     {
-        name: "monitorModel",
-        type: "glbModel",
-        path: "/models/monitor.glb"
-    },
-    {
         name: "background",
         type: "texture",
         path: "/textures/background.jpg"
@@ -38,10 +33,5 @@ export default [
         name: "environmentMap",
         type: "textureHDR",
         path: "/textures/environment/sky.hdr"
-    },
-    {
-        name: "screen",
-        type: "videoTexture",
-        path: "/textures/car.mp4"
     }
 ]

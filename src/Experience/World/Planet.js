@@ -45,7 +45,7 @@ export default class Planet {
 
         // Atmosphere
         this.atmosphereGeometry = new THREE.SphereGeometry(1.1, 32, 32);
-    };
+    }
 
     setTextures() {
         this.textures = {};
@@ -54,7 +54,7 @@ export default class Planet {
         this.textures.displacement = this.resources.items.earthTopographyTexture;
         this.textures.specular = this.resources.items.earthSpecularTexture;
         this.textures.cloudsColor = this.resources.items.cloudsTexture;
-    };
+    }
 
     setMaterial() {
         // Earth
@@ -98,7 +98,7 @@ export default class Planet {
                 uAtmosphereColor: { value: new THREE.Color('#0091ff') }
             }
         })
-    };
+    }
 
     setMesh() {
         this.earth = new THREE.Mesh(this.earthGeometry, this.earthMaterial);
@@ -115,10 +115,10 @@ export default class Planet {
         if (this.debug.active) {
             this.debugFolder.add(this.planet.position, "x", 0, 5, 0.001)
         }
-    };
+    }
 
     resize() {
-        this.planet.position.x = this.sizes.width * 0.0012
+        // this.planet.position.x = this.sizes.width * 0.0012
     }
 
     update() {
