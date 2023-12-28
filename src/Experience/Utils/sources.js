@@ -2,7 +2,7 @@ export default [
     {
         name: "textModel",
         type: "glbModel",
-        path: "/models/text_for_intro.glb"
+        path: "/models/text.glb"
     },
     {
         name: "background",

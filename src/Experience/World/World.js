@@ -44,7 +44,8 @@ export default class World {
             this.planet.update();
 
             if (this.intro) {
-                this.text.textAnimation();
+                // this.text.textAnimation();
+                this.text.update()
                 this.environment.animateLight();
             }
         }
