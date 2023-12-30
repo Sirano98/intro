@@ -11,7 +11,8 @@ export default class Environment {
         this.animationStep = this.experience.lerping.animationStep;
         this.parameters = {
             lightPosition: new THREE.Vector3(3, 0.5, 2.5),
-            lightInitPosition: new THREE.Vector3(3, 2.6, -2.3)
+            lightInitPosition: new THREE.Vector3(3, 2.6, -2.3),
+            intensity: 1.3
         }
         this.lightRotateStep = this.animationStep(0.1)
 
@@ -43,11 +44,14 @@ export default class Environment {
     updateMaterials(text) {
         text.traverse((child) => {
             if (child.isMesh && child.material.isMeshStandardMaterial) {
-
                 if (this.environmentMap.isTexture) {
                     child.material.envMap = this.environmentMap
                 }
-                child.material.envMapIntensity = 1.3
+
+                let intensity = 1.3
+
+                text.name === "InteractiveText" ? intensity = 2.2 : intensity
+                child.material.envMapIntensity = intensity
             }
         })
     }

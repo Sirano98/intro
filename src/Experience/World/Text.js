@@ -111,7 +111,9 @@ export default class Text extends EventEmitter {
 
             if (animTime < this.animation.duration) {
                 this.animation.mixer.setTime(animTime)
+                return
             }
+            this.emit("introFinished")
         }
     }
 }
