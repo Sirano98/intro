@@ -9,6 +9,7 @@ import Debug from './Utils/Debug';
 import Lerping from './Utils/Lerping';
 
 import sources from './Utils/sources';
+import Raycast from './Utils/Raycast';
 
 THREE.ColorManagement.enabled = false
 
@@ -29,7 +30,8 @@ export default class Experience {
         this.time = new Time();
         this.sizes = new Sizes();
         this.camera = new Camera();
-        this.resources = new Resources(sources)
+        this.raycast = new Raycast();
+        this.resources = new Resources(sources);
         this.renderer = new Renderer();
         this.world = new World();
 

@@ -10,6 +10,8 @@ export default class InteractiveText {
         this.time = this.experience.time
         this.sizes = this.experience.sizes
         this.animationStep = this.experience.lerping.animationStep
+        this.raycast = this.experience.raycast
+        this.intersects = null
         this.textRotation = this.animationStep(0.6)
         this.textMoving = this.animationStep(0.6)
         this.parameters = {
@@ -26,6 +28,8 @@ export default class InteractiveText {
         }
 
         this.setModel()
+        window.addEventListener('mousemove', this.raycast.onMove.bind(this.raycast))
+        window.addEventListener('click', () => { this.onTextClick() })
     }
 
     setModel() {
@@ -34,11 +38,11 @@ export default class InteractiveText {
         this.interactiveText.position.set(...this.parameters.textInitPosition)
         // this.interactiveText.rotation.set(...this.parameters.textFinalRotation)
 
-        this.textInitQuaternion = new THREE.Quaternion()
-        this.textInitQuaternion.setFromEuler(this.parameters.textInitRotation)
+        // this.textInitQuaternion = new THREE.Quaternion()
+        // this.textInitQuaternion.setFromEuler(this.parameters.textInitRotation)
 
-        this.textFinalQuaternion = new THREE.Quaternion()
-        this.textFinalQuaternion.setFromEuler(this.parameters.textFinalRotation)
+        // this.textFinalQuaternion = new THREE.Quaternion()
+        // this.textFinalQuaternion.setFromEuler(this.parameters.textFinalRotation)
 
         if (this.debug.active) {
             this.debugFolder.add(this.interactiveText.position, "x", -2, 2, 0.001)
@@ -55,6 +59,10 @@ export default class InteractiveText {
         return -(Math.cos(Math.PI * step) - 1) / 2;
     }
 
+    onTextClick() {
+        window.location = "https://recruitment.casino/";
+    }
+
     update() {
         this.interactiveText.position
             .lerpVectors(this.parameters.textInitPosition, this.parameters.textFinalPosition, this.textMoving(this.time.delta))
@@ -63,5 +71,7 @@ export default class InteractiveText {
             .lerpVectors(this.parameters.textInitRotation, this.parameters.textFinalRotation, this.textRotation(this.time.delta, this.easeInCubic))
 
         this.interactiveText.rotation.set(...this.parameters.currentRotation)
+
+        this.intersects = this.raycast.raycast(this.interactiveText)
     }
 }
