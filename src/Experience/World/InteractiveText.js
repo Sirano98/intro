@@ -19,7 +19,8 @@ export default class InteractiveText {
             textFinalRotation: new THREE.Vector3(Math.PI / 2, 0, Math.PI * 2),
             textInitPosition: new THREE.Vector3(0, -2, 1),
             textFinalPosition: new THREE.Vector3(0, -0.9, 1),
-            currentRotation: new THREE.Vector3(0)
+            currentRotation: new THREE.Vector3(0),
+            scale: 1
         }
 
         this.debug = this.experience.debug;
@@ -28,7 +29,7 @@ export default class InteractiveText {
         }
 
         this.setModel()
-        window.addEventListener('mousemove', this.raycast.onMove.bind(this.raycast))
+        window.addEventListener('mousemove', () => { this.raycast.onMove(event) })
         window.addEventListener('click', () => { this.onTextClick() })
     }
 
@@ -36,13 +37,17 @@ export default class InteractiveText {
         this.interactiveText = this.resource.scene.children[0]
         this.scene.add(this.interactiveText)
         this.interactiveText.position.set(...this.parameters.textInitPosition)
-        // this.interactiveText.rotation.set(...this.parameters.textFinalRotation)
 
-        // this.textInitQuaternion = new THREE.Quaternion()
-        // this.textInitQuaternion.setFromEuler(this.parameters.textInitRotation)
-
-        // this.textFinalQuaternion = new THREE.Quaternion()
-        // this.textFinalQuaternion.setFromEuler(this.parameters.textFinalRotation)
+        this.planeForText = new THREE.Mesh(
+            new THREE.PlaneGeometry(3.5, 1),
+            new THREE.MeshStandardMaterial({
+                color: "#ffffff",
+                transparent: true,
+                opacity: 0
+            })
+        )
+        this.scene.add(this.planeForText)
+        this.planeForText.position.set(0, -1, 1)
 
         if (this.debug.active) {
             this.debugFolder.add(this.interactiveText.position, "x", -2, 2, 0.001)
@@ -60,7 +65,9 @@ export default class InteractiveText {
     }
 
     onTextClick() {
-        window.location = "https://recruitment.casino/";
+        if (this.intersects.length) {
+            window.location = "https://recruitment.casino/";
+        }
     }
 
     update() {
@@ -72,6 +79,14 @@ export default class InteractiveText {
 
         this.interactiveText.rotation.set(...this.parameters.currentRotation)
 
-        this.intersects = this.raycast.raycast(this.interactiveText)
+        this.intersects = this.raycast.raycast(this.planeForText)
+
+        if (this.intersects.length) {
+            this.parameters.scale < 1.2 ? this.parameters.scale += 0.01 : this.parameters.scale = 1.2
+            this.interactiveText.scale.set(this.parameters.scale, this.parameters.scale, this.parameters.scale)
+        } else {
+            this.parameters.scale > 1 ? this.parameters.scale -= 0.01 : this.parameters.scale = 1
+            this.interactiveText.scale.set(this.parameters.scale, this.parameters.scale, this.parameters.scale)
+        }
     }
 }
