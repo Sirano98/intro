@@ -8,6 +8,9 @@ export default class Camera {
         this.scene = this.experience.scene;
         this.canvas = this.experience.canvas;
         this.time = this.experience.time;
+        this.maxFOV = 83;
+        this.minFOV = 35;
+        this.totalFOVRange = this.maxFOV - this.minFOV;
         this.animationStep = this.experience.lerping.animationStep;
         this.cameraMoveStep = this.animationStep(0.06);
         this.cameraRotateStep = this.animationStep(0.1);
@@ -18,7 +21,14 @@ export default class Camera {
             cameraInitRotaton: new THREE.Euler(0, 0, -0.61)
         }
 
+        this.debug = this.experience.debug;
+        if (this.debug.active) {
+            this.debugFolder = this.debug.debugUI.addFolder("camera")
+        }
+
+
         this.createPerspectiveCamera()
+        this.resize()
     }
 
     createPerspectiveCamera() {
@@ -34,15 +44,29 @@ export default class Camera {
         this.cameraFinalQuaternion.setFromEuler(this.parameters.cameraRotation)
 
         this.scene.add(this.camera)
+
+        if (this.debug.active) {
+            this.debugFolder.add(this.camera, "fov", 20, 100, 1).onChange(() => {
+                this.camera.aspect = this.sizes.width / this.sizes.height
+                this.camera.updateProjectionMatrix()
+            })
+        }
     }
 
     resize() {
         this.camera.aspect = this.sizes.width / this.sizes.height
+        let currentFOVonRange = (this.sizes.currentScalePercent * this.totalFOVRange) / 100
+        let currentFOV = this.maxFOV - currentFOVonRange
+        this.camera.fov = currentFOV
+
+        if (this.camera.aspect < 0.5) {
+            this.camera.fov = this.maxFOV
+        }
+
         this.camera.updateProjectionMatrix()
     }
 
     animateCamera() {
-
         let cameraMoveProgress = 0;
 
         // rotate camera

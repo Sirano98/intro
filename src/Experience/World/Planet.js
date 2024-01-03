@@ -118,7 +118,7 @@ export default class Planet {
     }
 
     resize() {
-        // this.planet.position.x = this.sizes.width * 0.0012
+        // this.planet.scale.set(this.sizes.scaleFactor, this.sizes.scaleFactor, this.sizes.scaleFactor)
     }
 
     update() {

@@ -36,7 +36,6 @@ export default class World {
             this.background.setBackgroundImageSize()
 
             if (!this.intro) {
-                this.planet.resize()
                 this.environment.resize()
             }
         }
@@ -47,7 +46,6 @@ export default class World {
             this.planet.update();
 
             if (this.intro) {
-                // this.text.textAnimation();
                 this.text.update()
                 this.environment.animateLight()
 
