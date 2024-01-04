@@ -29,8 +29,8 @@ export default class InteractiveText {
         }
 
         this.setModel()
-        window.addEventListener('mousemove', () => { this.raycast.onMove(event) })
-        window.addEventListener('click', () => { this.onTextClick() })
+        window.addEventListener('mousemove', () => { this.onTextHover() })
+        window.addEventListener('pointerdown', () => { this.onTextClick() })
     }
 
     setModel() {
@@ -64,7 +64,16 @@ export default class InteractiveText {
         return -(Math.cos(Math.PI * step) - 1) / 2;
     }
 
+    onTextHover() {
+        this.raycast.onMove(event)
+        this.intersects = this.raycast.raycast(this.planeForText)
+    }
+
     onTextClick() {
+        if (event.type === "pointerdown") {
+            this.onTextHover()
+        }
+
         if (this.intersects.length) {
             window.location = "https://recruitment.casino/";
         }
