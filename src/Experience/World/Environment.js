@@ -34,6 +34,11 @@ export default class Environment {
         this.ambientlight = new THREE.AmbientLight(0x404040, 2)
 
         this.scene.add(this.light, this.ambientlight)
+
+        this.lightForInterText = new THREE.SpotLight('#ffffff', 2, 2.8, 1.5)
+        this.lightForInterText.target.position.set(0.46, 0, 0)
+        this.lightForInterText.position.set(-1.9, 0.066, 1.837)
+        this.scene.add(this.lightForInterText, this.lightForInterText.target)
     }
 
     setEnvironmentMap() {
@@ -50,7 +55,7 @@ export default class Environment {
 
                 let intensity = 1.3
 
-                text.name === "InteractiveText" ? intensity = 2.2 : intensity
+                text.name === "InteractiveText" ? intensity = 0 : intensity
                 child.material.envMapIntensity = intensity
             }
         })
