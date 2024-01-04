@@ -39,15 +39,14 @@ export default class InteractiveText {
         this.interactiveText.position.set(...this.parameters.textInitPosition)
 
         this.planeForText = new THREE.Mesh(
-            new THREE.PlaneGeometry(3.5, 1),
+            new THREE.PlaneGeometry(2.3, 0.5),
             new THREE.MeshStandardMaterial({
-                color: "#ffffff",
                 transparent: true,
-                opacity: 0
+                opacity: 0.5
             })
         )
         this.scene.add(this.planeForText)
-        this.planeForText.position.set(0, -1, 1)
+        this.planeForText.position.set(0, -0.9, 1)
 
         if (this.debug.active) {
             this.debugFolder.add(this.interactiveText.position, "x", -2, 2, 0.001)
