@@ -37,6 +37,7 @@ export default class World {
 
             if (!this.intro) {
                 this.environment.resize()
+                this.interactiveText.resize()
             }
         }
     }

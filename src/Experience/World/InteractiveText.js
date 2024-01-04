@@ -29,6 +29,7 @@ export default class InteractiveText {
         }
 
         this.setModel()
+        this.resize()
         window.addEventListener('mousemove', () => { this.onTextHover() })
         window.addEventListener('pointerdown', () => { this.onTextClick() })
     }
@@ -36,7 +37,6 @@ export default class InteractiveText {
     setModel() {
         this.interactiveText = this.resource.scene.children[0]
         this.scene.add(this.interactiveText)
-        this.interactiveText.position.set(...this.parameters.textInitPosition)
 
         this.planeForText = new THREE.Mesh(
             new THREE.PlaneGeometry(2.3, 0.5),
@@ -49,9 +49,9 @@ export default class InteractiveText {
         this.planeForText.position.set(0, -0.9, 1)
 
         if (this.debug.active) {
-            this.debugFolder.add(this.interactiveText.position, "x", -2, 2, 0.001)
-            this.debugFolder.add(this.interactiveText.position, "y", -3, 2, 0.001)
-            this.debugFolder.add(this.interactiveText.position, "z", -2, 2, 0.001)
+            this.debugFolder.add(this.parameters.textFinalPosition, "x", -2, 2, 0.001)
+            this.debugFolder.add(this.parameters.textFinalPosition, "y", -5, 2, 0.001)
+            this.debugFolder.add(this.parameters.textFinalPosition, "z", -2, 2, 0.001)
 
             this.debugFolder.add(this.parameters.textFinalRotation, "x", -6, 6, 0.001)
             this.debugFolder.add(this.parameters.textFinalRotation, "y", -6, 6, 0.001)
@@ -76,6 +76,22 @@ export default class InteractiveText {
         if (this.intersects.length) {
             window.location = "https://recruitment.casino/";
         }
+    }
+
+    resize() {
+        const camera = this.experience.camera.camera
+        let pos = new THREE.Vector3
+        const wordCoordFromScreen = new THREE.Vector3(0, -0.8, 0)
+        wordCoordFromScreen.unproject(this.experience.camera.camera)
+        wordCoordFromScreen.sub(camera.position).normalize();
+
+        const distance = - camera.position.z / wordCoordFromScreen.z;
+
+        pos.copy(camera.position).add(wordCoordFromScreen.multiplyScalar(distance));
+
+        this.parameters.textFinalPosition.y = wordCoordFromScreen.y + 0.6
+        this.parameters.textInitPosition.y = (wordCoordFromScreen.y + 0.6) - 1
+        this.planeForText.position.y = wordCoordFromScreen.y + 0.6
     }
 
     update() {
