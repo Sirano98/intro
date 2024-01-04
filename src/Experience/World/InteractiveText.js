@@ -42,7 +42,7 @@ export default class InteractiveText {
             new THREE.PlaneGeometry(2.3, 0.5),
             new THREE.MeshStandardMaterial({
                 transparent: true,
-                opacity: 0.5
+                opacity: 0
             })
         )
         this.scene.add(this.planeForText)
