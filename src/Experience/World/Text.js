@@ -51,7 +51,7 @@ export default class Text extends EventEmitter {
     }
 
     update() {
-        if (this.text && this.experience.world?.planet?.earthRotationInDegrees > 285) {
+        if (this.text && this.experience.world?.planet?.earthRotationInDegrees > 265) {
 
             let animTime = this.animation.mixer.time + this.time.delta * 0.5
 
