@@ -1,7 +1,6 @@
 import Experience from "../Experience";
 import Background from "./Background";
 import Environment from "./Environment";
-import InteractiveText from "./InteractiveText";
 import Planet from "./Planet";
 import Text from "./Text";
 
@@ -20,8 +19,6 @@ export default class World {
 
             this.text.on("introFinished", () => {
                 this.intro = false
-                this.interactiveText = new InteractiveText()
-                this.environment.updateMaterials(this.interactiveText.interactiveText)
             })
 
             this.environment = new Environment()
@@ -37,7 +34,6 @@ export default class World {
 
             if (!this.intro) {
                 this.environment.resize()
-                this.interactiveText.resize()
             }
         }
     }
@@ -52,8 +48,6 @@ export default class World {
 
                 return
             }
-
-            this.interactiveText.update()
         }
     }
 }

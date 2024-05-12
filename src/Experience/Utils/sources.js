@@ -5,11 +5,6 @@ export default [
         path: "/models/text.glb"
     },
     {
-        name: "interactiveText",
-        type: "glbModel",
-        path: "/models/interactive-text.glb"
-    },
-    {
         name: "background",
         type: "texture",
         path: "/textures/background.jpg"
